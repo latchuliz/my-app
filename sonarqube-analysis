@@ -1,0 +1,24 @@
+node{
+   stage('SCM Checkout'){
+     git 'https://github.com/latchuliz/my-app'
+   }
+   stage('Compile-Package'){
+    def mvnHome = tool name: 'maven', type: 'maven' 
+    sh "${mvnHome}/bin/mvn package"
+   }
+
+   stage('SonarQube Analysis'){
+    def mvnHome = tool name: 'maven', type: 'maven'
+    withSonarQubeEnv('SonarQube-CodeQuality'){
+      sh "${mvnHome}/bin/mvn sonar:sonar"
+    }
+   }
+   stage('Email Notification'){
+   mail bcc: '', body: '''Jenkins Mail Alert
+   Thanking you,
+   Latchu-Admin''', cc: '', from: '', replyTo: '', subject: 'Jenkins Job', to: 'lakshminarayanan.shenll@gmail.com'
+      }
+   stage('Slack Notification'){
+   slackSend baseUrl: 'https://hooks.slack.com/services/', channel: '#jenkins-pipeline', color: 'good', message: 'Welcome To Jenkins Slack', tokenCredentialId: 'slack-token', username: 'lakshminarayanan'
+   }
+}
