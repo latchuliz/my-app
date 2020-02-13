@@ -9,4 +9,7 @@ node{
 	stage('Email Notification'){
 	mail bcc: '', body: 'Hi Latchu, Welcome', cc: '', from: '', replyTo: '', subject: 'Jenkins Alert Mail', to: 'lakshminarayanan.shenll@gmail.com'
 	}
+	stage('Slack Notification'){
+	slackSend baseUrl: 'https://hooks.slack.com/services/', channel: '#devops', color: 'good', message: 'Welcome To Jenkins Slack', tokenCredentialId: 'SlackIntegration', username: 'Latchu'
+	}
 }
