@@ -1,0 +1,41 @@
+node{
+   stage('SCM Checkout'){
+     git 'https://github.com/latchuliz/my-app'
+   }
+   stage('Compile-Package'){
+    def mvnHome = tool name: 'maven-3', type: 'maven' 
+    sh "${mvnHome}/bin/mvn package"
+   }
+   
+   	stage('Deploy To Tomcat Server'){
+		sshagent(['Tomcatdev']) {
+    		sh 'scp -o StrictHostKeyChecking=no target/*.war ubuntu@172.31.45.5:/opt/tomcat/webapps/'
+		}
+	}
+
+   stage('SonarQube Analysis'){
+    def mvnHome = tool name: 'maven-3', type: 'maven'
+    withSonarQubeEnv('sonar-6'){
+      sh "${mvnHome}/bin/mvn sonar:sonar"
+    }
+   }
+
+   stage("Quality Gate Status Check"){
+   		timeout(time: 1, unit: 'HOURS') {
+   		    def qg = waitForQualityGate()
+   		    if (qg.status != 'OK') {
+   		    	slackSend baseUrl: 'https://hooks.slack.com/services/', channel: '#devops', color: 'danger', message: 'SonarQube Analysis Failed', tokenCredentialId: 'SlackIntegration', username: 'Latchu',
+   		    	error "Pipeline Aborted Due to Quality Gate Failure: ${qg.status}"
+   		    }
+   		}
+   }
+
+   stage('Email Notification'){
+   mail bcc: '', body: '''Jenkins Mail Alert
+   Thanking you,
+   Latchu-Admin''', cc: '', from: '', replyTo: '', subject: 'Jenkins Job', to: 'lakshminarayanan.shenll@gmail.com'
+      }
+   stage('Slack Notification'){
+   slackSend baseUrl: 'https://hooks.slack.com/services/', channel: '#devops', color: 'good', message: 'Welcome To Jenkins Slack', tokenCredentialId: 'SlackIntegration', username: 'Latchu'
+   }
+}
