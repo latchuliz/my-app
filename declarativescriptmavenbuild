@@ -1,0 +1,20 @@
+	pipeline{
+	agent any
+
+	environment{
+		PATH = "/opt/maven3/bin:$PATH"
+	}
+
+	stages{
+		stage("Git Checkout"){
+			steps{
+				git credentialsId: 'c142c9ab-c6eb-4d24-ac7f-024181e0ad69', url: 'https://github.com/latchuliz/my-app.git'
+				}
+			}
+			stage("Maven BUild"){
+				steps{
+					sh "mvn clean package"
+				}
+			}
+		}
+	}
