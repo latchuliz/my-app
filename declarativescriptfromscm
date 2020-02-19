@@ -1,0 +1,11 @@
+
+	pipeline{
+	agent any
+	stages{
+		stage("Git Checkout"){
+			steps{
+				git credentialsId: 'c142c9ab-c6eb-4d24-ac7f-024181e0ad69', url: 'https://github.com/latchuliz/my-app.git'
+				}
+			}
+		}
+	}
