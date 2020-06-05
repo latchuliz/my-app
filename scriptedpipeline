@@ -1,0 +1,26 @@
+node{
+    stage('SCM Checkout'){
+        git credentialsId: 'githubmyapp-creds', url: 'https://github.com/javahometech/my-app.git'
+    }
+    stage('MVN Package'){
+        def mvnHome = tool name: 'maven', type: 'maven'
+        //def mvnCMD = "{mvnHome}/bin/mvn"
+        sh "${mvnHome}/bin/mvn clean package"
+    }
+    stage('Build Docker Image'){
+        sh 'docker build -t latchu/my-app:2.0.0 .'
+    }
+    stage('Push Docker Image'){
+        withCredentials([string(credentialsId: 'dockerpwd', variable: 'dockerhubpwd')]) {
+            sh "docker login -u latchu -p ${dockerhubpwd}"
+        }
+        sh 'docker push latchu/my-app:2.0.0'
+    }
+    stage('Run Docker Container Development Server'){
+        def dockerRun = 'docker run -p 80:8080 -d --name my-app latchu/my-app:2.0.0'
+        sshagent(['remoteprivatekey']) {
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@172.31.57.218 ${dockerRun}"
+        }
+    }
+    
+}
